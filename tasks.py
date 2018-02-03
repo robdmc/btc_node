@@ -203,7 +203,8 @@ def wait_droplet(name):
         dont_store_name='if set, name will not be stored in local config',
     )
 )
-def create_droplet(ctx, name='', size='512mb', dont_store_name=False):
+def create_droplet(
+        ctx, name='', size='512mb', region='nyc1', dont_store_name=False):
     """
     Create a new droplet
     """
@@ -214,8 +215,7 @@ def create_droplet(ctx, name='', size='512mb', dont_store_name=False):
     droplet = digitalocean.Droplet(
         token=config.key,
         name=name,
-        # region='nyc1',
-        region='sfo2',
+        region=region,
         image='ubuntu-16-04-x64',
         size_slug=size,
         ssh_keys=manager.get_all_sshkeys(),
@@ -258,21 +258,46 @@ def _initialize_droplet(ctx):
 
 
 @inv.task(_initialize_droplet)
-def _install_project(ctx):
+def _install_python(ctx):
     """
-    Install the project
+    Install python on droplet
     """
     run_script(
         """
-        (rm -rf ~/cointick 2> /dev/null || true)
-        (cd ~ && git clone https://github.com/robdmc/cointick)
-        (/root/miniconda3/bin/conda clean --packages -y)
-        (cd ~/cointick && /root/miniconda3/bin/conda env create --force -q -f environment.yml)
+        apt-get -y install python python-dev
+        apt-get -y install python-pip
         """
     )
 
 
-@inv.task(_install_project)
+@inv.task(_install_python)
+def _install_docker(ctx):
+    """
+    Install docker on droplet
+    """
+    run_script(
+        """
+        sudo apt-get install -y docker-ce
+        pip install docker-compose
+        """
+    )
+
+# @inv.task(_initialize_droplet)
+# def _install_project(ctx):
+#     """
+#     Install the project
+#     """
+#     run_script(
+#         """
+#         (rm -rf ~/cointick 2> /dev/null || true)
+#         (cd ~ && git clone https://github.com/robdmc/cointick)
+#         (/root/miniconda3/bin/conda clean --packages -y)
+#         (cd ~/cointick && /root/miniconda3/bin/conda env create --force -q -f environment.yml)
+#         """
+#     )
+
+
+@inv.task(_install_docker)
 def deploy(ctx):
     """
     Deploy this project
@@ -280,39 +305,35 @@ def deploy(ctx):
     """
 
 
-@inv.task
-def pull_data(ctx):
-    """
-    Install the project
-    """
-    config = get_config()
-
-    run_script(
-        """
-        (cd ~/cointick/ && tar -czvf ~/latest_coin_data.tar.gz ./five_minute_data)
-        """
-    )
-    fab.local('rm -rf five_minute_data/')
-    fab.local('scp root@{}:/root/latest_coin_data.tar.gz .'.format(config.host))
-    fab.local('tar -xvf latest_coin_data.tar.gz')
-
-
-@inv.task
-def pull_mining_data(ctx):
-    """
-    Install the project
-    """
-    config = get_config()
-
-    run_script(
-        """
-        (cd ~/cointick/ && tar -czvf ~/latest_coin_data.tar.gz ./five_minute_data/whattomine*)
-        """
-    )
-    fab.local('rm -rf five_minute_data/')
-    fab.local('scp root@{}:/root/latest_coin_data.tar.gz .'.format(config.host))
-    fab.local('tar -xvf latest_coin_data.tar.gz')
-
-
-# run a task with this to get latest data
-# (cd ~/cointick/ && tar -czvf ~/latest_coin_data.tar.gz ./five_minute_data/)
+# @inv.task
+# def pull_data(ctx):
+#     """
+#     Install the project
+#     """
+#     config = get_config()
+# 
+#     run_script(
+#         """
+#         (cd ~/cointick/ && tar -czvf ~/latest_coin_data.tar.gz ./five_minute_data)
+#         """
+#     )
+#     fab.local('rm -rf five_minute_data/')
+#     fab.local('scp root@{}:/root/latest_coin_data.tar.gz .'.format(config.host))
+#     fab.local('tar -xvf latest_coin_data.tar.gz')
+# 
+# 
+# @inv.task
+# def pull_mining_data(ctx):
+#     """
+#     Install the project
+#     """
+#     config = get_config()
+# 
+#     run_script(
+#         """
+#         (cd ~/cointick/ && tar -czvf ~/latest_coin_data.tar.gz ./five_minute_data/whattomine*)
+#         """
+#     )
+#     fab.local('rm -rf five_minute_data/')
+#     fab.local('scp root@{}:/root/latest_coin_data.tar.gz .'.format(config.host))
+#     fab.local('tar -xvf latest_coin_data.tar.gz')
