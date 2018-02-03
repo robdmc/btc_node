@@ -1,5 +1,5 @@
 # Run this to create: conda env create --force -f environment_deploy.yml
-name: cointick_deploy
+name: btc_deploy
 dependencies:
     - python=2.7
     - pip:

@@ -1,4 +1,6 @@
 # Run this to create: conda env create --force -f environment_analysis.yml
+# Also need to run the below to get pdvega working
+# jupyter nbextension enable vega3 --py --sys-prefix
 name: btc_analysis
 dependencies:
     - python=3.6
@@ -14,6 +16,7 @@ dependencies:
     - pip:
         - pandashells
         - fleming
+        - pdvega
     - pip:
         - mpld3
         - pandashells
