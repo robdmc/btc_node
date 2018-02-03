@@ -1,0 +1,16 @@
+# Run this to create: conda env create --force -f environment.yml
+name: btc
+channels:
+    - conda-forge
+    - defaults
+dependencies:
+    - pandas
+    - dask
+    - fastparquet
+    - python=3.6
+    - pip:
+        - requests
+        - pytest
+        - pandashells
+        - fleming
+        - crontabs
